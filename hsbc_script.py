@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import requests
+import requests                                 #export necessary libraries for the code
 import json, xmljson
 import ssl
 from time import sleep
@@ -17,7 +17,7 @@ import os
 import sys
 
 
-class CustomFormatter(logging.Formatter):
+class CustomFormatter(logging.Formatter):               #Define colors for outputs in terminal or logs using logging function
 
     green = "\x1b[32;21m"
     grey = "\x1b[38;21m"
@@ -70,7 +70,7 @@ def ssl_verify():
 
                                                
                                                 
-def get_vars(var_file):  
+def get_vars(var_file):                                                                                 #Definition of variables as global for using in all functions
     global cr, user, password, gsd_token_url, gsd_url, cis_url, data_token, data_request
     cr = os.environ['CHANGE_REQUEST']
     
@@ -94,7 +94,7 @@ def get_vars(var_file):
     }
 
     data_request= f"""
-                    <ChangeInquiryRequest action="InquiryRequest" function="ChangeInquiry" genDateTZ="0" version="5.0" xmlns="http://www.hsbc.com/gsd/rest/ChangeInquiryRequest_v5.0.xsd">
+                    <ChangeInquiryRequest action="InquiryRequest" function="ChangeInquiry" genDateTZ="0" version="5.0" xmlns="your url">
                         <ApplicationID>{user}</ApplicationID>
                         <ChangeInquiryRequestDetail>
                             <ReferenceNumber>{cr}</ReferenceNumber>
@@ -104,7 +104,7 @@ def get_vars(var_file):
     
 
 
-def gsd_request():                          #GSD Validation 
+def gsd_request():                          #GSD Validation (Here we get the requests to the API)
     
     try:
         global gsd_access_token
@@ -125,34 +125,34 @@ def gsd_request():                          #GSD Validation
         
         if response.status_code == 200:
                 
-            json_cr = json.dumps(parker.data(fromstring(response.content)), indent = 4)
+            json_cr = json.dumps(parker.data(fromstring(response.content)), indent = 4)                     #Transformation of XML to JSON format useful to easier manipulation in Python
             #print(json_cr)                     #(Optional) Printed response in json format 
             cr_details = json.loads(json_cr)
                                                                     # Keys transformation to python dict
-            cr_details = {key.replace('{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}', 'CR'): cr_details.pop(key) for key in list(cr_details)}
+            cr_details = {key.replace('{your url}', 'CR'): cr_details.pop(key) for key in list(cr_details)}
                 
             global cr_response, cr_status, cr_id, cr_opendate, cr_group, cr_startdate, cr_enddate, cr_owner, ci_name_1, ci_class_1, ci_name_2, ci_class_2, ci_name_3, ci_class_3
-            cr_response = cr_details["CRChangeInquiryResponseDetail"]["Response"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}ReplyText")
+            cr_response = cr_details["CRChangeInquiryResponseDetail"]["Response"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}ReplyText")
             
             if cr_response == "Request processed Successfully.":
 
-                cr_status = cr_details["CRChangeInquiryResponseDetail"]["Status"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}Status") 
-                cr_id = cr_details["CRChangeInquiryResponseDetail"]["ReferenceNumber"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}ReferenceNumber")
-                cr_opendate = cr_details["CRChangeInquiryResponseDetail"]["OpenDate"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}OpenDate")
-                cr_group = cr_details["CRChangeInquiryResponseDetail"]["OwningGroup"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}OwningGroup")
-                cr_startdate = cr_details["CRChangeInquiryResponseDetail"]["StartDate"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}ScheduledStartDate")
-                cr_enddate = cr_details["CRChangeInquiryResponseDetail"]["EndDate"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}ScheduledEndDate")
-                cr_owner = cr_details["CRChangeInquiryResponseDetail"]["Owner"] = cr_details["CRChangeInquiryResponseDetail"].pop("{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}ChangeOwner")
-                ci_name_1 = cr_details["CRChangeInquiryResponseDetail"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIs"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CI"][0]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIName"]
-                ci_class_1 = cr_details["CRChangeInquiryResponseDetail"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIs"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CI"][0]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIClass"]
-                ci_name_2 = cr_details["CRChangeInquiryResponseDetail"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIs"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CI"][1]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIName"]
-                ci_class_2 = cr_details["CRChangeInquiryResponseDetail"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIs"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CI"][1]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIClass"]
+                cr_status = cr_details["CRChangeInquiryResponseDetail"]["Status"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}Status") 
+                cr_id = cr_details["CRChangeInquiryResponseDetail"]["ReferenceNumber"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}ReferenceNumber")
+                cr_opendate = cr_details["CRChangeInquiryResponseDetail"]["OpenDate"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}OpenDate")
+                cr_group = cr_details["CRChangeInquiryResponseDetail"]["OwningGroup"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}OwningGroup")
+                cr_startdate = cr_details["CRChangeInquiryResponseDetail"]["StartDate"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}ScheduledStartDate")
+                cr_enddate = cr_details["CRChangeInquiryResponseDetail"]["EndDate"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}ScheduledEndDate")
+                cr_owner = cr_details["CRChangeInquiryResponseDetail"]["Owner"] = cr_details["CRChangeInquiryResponseDetail"].pop("{your rest API URL}ChangeOwner")
+                ci_name_1 = cr_details["CRChangeInquiryResponseDetail"]["{your rest API URL}CIs"]["{your rest API URL}CI"][0]["{your rest API URL}CIName"]
+                ci_class_1 = cr_details["CRChangeInquiryResponseDetail"]["{your rest API URL}CIs"]["{your rest API URL}CI"][0]["{your rest API URL}CIClass"]
+                ci_name_2 = cr_details["CRChangeInquiryResponseDetail"]["{your rest API URL}CIs"]["{your rest API URL}CI"][1]["{your rest API URL}CIName"]
+                ci_class_2 = cr_details["CRChangeInquiryResponseDetail"]["{your rest API URL}CIs"]["{your rest API URL}CI"][1]["{your rest API URL}CIClass"]
                 
                 try:
 
                     ci_name_3 = True
-                    ci_name_3 = cr_details["CRChangeInquiryResponseDetail"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIs"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CI"][2]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIName"]
-                    ci_class_3 = cr_details["CRChangeInquiryResponseDetail"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIs"]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CI"][2]["{http://www.hsbc.com/gsd/rest/ChangeInquiryResponse_v5.0.xsd}CIClass"]
+                    ci_name_3 = cr_details["CRChangeInquiryResponseDetail"]["{your rest API URL}CIs"]["{your rest API URL}CI"][2]["{your rest API URL}CIName"]
+                    ci_class_3 = cr_details["CRChangeInquiryResponseDetail"]["{your rest API URL}CIs"]["{your rest API URL}CI"][2]["{your rest API URL}CIClass"]
                 except IndexError:
                     logging.debug("This CR only has two Direct CIs")
                     ci_name_3 = False
@@ -185,7 +185,7 @@ def cis_request():
     try: 
         
         data_cis_1= f"""
-            <CIListRequest xmlns="http://www.hsbc.com/gsd/rest/CIListRequest_v1.0.xsd" version="1.0" genDateTZ="0" function="CIList" action="InquiryRequest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <CIListRequest xmlns="your rest API URL" version="1.0" genDateTZ="0" function="CIList" action="InquiryRequest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 <ApplicationID>{user}</ApplicationID>
                 <CIListRequestDetail>
                     <CIName>{ci_name_1}%</CIName>
@@ -194,7 +194,7 @@ def cis_request():
             </CIListRequest>"""
 
         data_cis_2= f"""
-            <CIListRequest xmlns="http://www.hsbc.com/gsd/rest/CIListRequest_v1.0.xsd" version="1.0" genDateTZ="0" function="CIList" action="InquiryRequest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <CIListRequest xmlns="your rest API URL" version="1.0" genDateTZ="0" function="CIList" action="InquiryRequest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                 ApplicationID>{user}</ApplicationID>
                 <CIListRequestDetail>
                     <CIName>{ci_name_2}%</CIName>
@@ -204,7 +204,7 @@ def cis_request():
         
         if ci_name_3 == True:
             data_cis_3= f"""
-                <CIListRequest xmlns="http://www.hsbc.com/gsd/rest/CIListRequest_v1.0.xsd" version="1.0" genDateTZ="0" function="CIList" action="InquiryRequest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <CIListRequest xmlns="your rest API URL" version="1.0" genDateTZ="0" function="CIList" action="InquiryRequest" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                     <ApplicationID>{user}</ApplicationID>
                     <CIListRequestDetail>
                         <CIName>{ci_name_3}%</CIName>
@@ -233,12 +233,12 @@ def cis_request():
                 json_cis_1 = json.dumps(parker.data(fromstring(response_1.content)), indent = 4)
                 #print(json_cis_1)                     #(Optional) Printed response in json format 
                 ci_details_1 = json.loads(json_cis_1)
-                ci_details_1 = {key.replace('{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIListResponseDetail', 'CIListResponseDetail'): ci_details_1.pop(key) for key in list(ci_details_1)}
+                ci_details_1 = {key.replace('{your CIList API URL}CIListResponseDetail', 'CIListResponseDetail'): ci_details_1.pop(key) for key in list(ci_details_1)}
                 
                 global ci_purpose
 
-                ci_status = ci_details_1["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Status"]
-                ci_purpose = ci_details_1["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Purpose"]
+                ci_status = ci_details_1["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Status"]
+                ci_purpose = ci_details_1["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Purpose"]
                 #print(ci_purpose)
                 if ci_status == "Active":
                     logging.info("Status for this Change Order CIs is Active. Status: " + ci_status)
@@ -258,11 +258,11 @@ def cis_request():
                     json_cis_2 = json.dumps(parker.datq(fromstring(response_2.content)), indent=4)
                     #print(json_cis_2)           (OPTIONAL) Printed respon in JSON format
                     ci_details_2 = json.loads(json_cis_2)
-                    ci_details_2 - {key.replace('{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIListResponse Detail', 'CIListResponseDetail'): ci_details_2.pop(key) for key in list(ci_details_2)}
+                    ci_details_2 - {key.replace('{your CIList API URL}CIListResponse Detail', 'CIListResponseDetail'): ci_details_2.pop(key) for key in list(ci_details_2)}
                     
 
-                    ci_status = ci_details_2["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Status"]
-                    ci_purpose = ci_details_2["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Purpose"]
+                    ci_status = ci_details_2["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Status"]
+                    ci_purpose = ci_details_2["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Purpose"]
                     #print(ci_purpose)
                     if ci_status == "Active":
                         logging.info("Status for this Change Order CIs is Active. Status: " + ci_status)
@@ -282,9 +282,9 @@ def cis_request():
                             json_cis_3 = json.dumps(parker.data(fromstring(response_3.content)), indent = 4)
                             #print(json_cis_3)                     #(Optional) Printed response in json format 
                             ci_details_3 = json.loads(json_cis_3)
-                            ci_details_3 = {key.replace('{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIListResponseDetail', 'CIListResponseDetail'): ci_details_3.pop(key) for key in list(ci_details_3)}
-                            ci_status = ci_details_3["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Status"]
-                            ci_purpose = ci_details_3["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Purpose"]
+                            ci_details_3 = {key.replace('{your CIList API URL}CIListResponseDetail', 'CIListResponseDetail'): ci_details_3.pop(key) for key in list(ci_details_3)}
+                            ci_status = ci_details_3["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Status"]
+                            ci_purpose = ci_details_3["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Purpose"]
                             #print(ci_purpose)
                             if ci_status == "Active":
                                 logging.info("Status for this Change Order CIs is Active. Status: " + ci_status)
@@ -299,8 +299,8 @@ def cis_request():
                                 raise Exception("This CI is not for Production purpose")
                     except KeyError:
                         try:    
-                            ci_status = ci_details_3["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Status"]
-                            ci_purpose = ci_details_3["CIListResponseDetail"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIList"]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}CIDetail"][1]["{http://www.hsbc.com/gsd/rest/CIListResponse_v1.0.xsd}Purpose"]
+                            ci_status = ci_details_3["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Status"]
+                            ci_purpose = ci_details_3["CIListResponseDetail"]["{your CIList API URL}CIList"]["{your CIList API URL}CIDetail"][1]["{your CIList API URL}Purpose"]
                             #print(ci_purpose)
                             if ci_status == "Active":
                                 logging.info("Status for this Change Order CIs is Active. Status: " + ci_status)

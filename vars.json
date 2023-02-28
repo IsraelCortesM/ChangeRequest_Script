@@ -1,0 +1,7 @@
+{
+    "gsd_user" : "user",
+    "gsd_password" : "pass",
+    "gsd_url" : "your gsd url"  ,
+    "gsd_token_url" : "your gsd token url" ,
+    "cis_url" : " your CI url" 
+}
